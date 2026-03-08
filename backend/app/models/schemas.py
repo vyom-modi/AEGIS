@@ -128,6 +128,6 @@ class StrategyResponse(BaseModel):
 class MissionLaunchResponse(BaseModel):
     """Response after launching a mission."""
     goal_id: UUID
-    plan_id: UUID
+    plan_id: Optional[UUID] = None
     status: str = "launched"
     message: str = "Mission launched successfully"

@@ -4,10 +4,13 @@ Goals API Routes.
 CRUD operations for goals and mission launching.
 """
 
+import asyncio
 from uuid import UUID
-from fastapi import APIRouter, HTTPException
+from datetime import datetime, timezone
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.database import get_db
 from app.models.schemas import GoalCreate, GoalResponse, MissionLaunchResponse
+from app.orchestrator.graph import run_mission
 
 router = APIRouter(prefix="/goals", tags=["goals"])
 
@@ -49,13 +52,44 @@ async def get_goal(goal_id: UUID):
     return result.data[0]
 
 
+async def _execute_mission(goal_id: str):
+    """Background task to run the full orchestration pipeline."""
+    db = get_db()
+    try:
+        result = await run_mission(goal_id)
+
+        # Update goal status based on result
+        verified = result.get("verified", False)
+        new_status = "completed" if verified else "failed"
+
+        db.table("goals").update({
+            "status": new_status,
+            "last_run_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("id", goal_id).execute()
+
+    except Exception as e:
+        # Mark goal as failed on error
+        db.table("goals").update({
+            "status": "failed",
+            "last_run_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("id", goal_id).execute()
+
+        # Log the error as a metric
+        db.table("metrics").insert({
+            "metric_name": "mission_error",
+            "value": 1.0,
+        }).execute()
+
+        print(f"[AEGIS] Mission failed for goal {goal_id}: {e}")
+
+
 @router.post("/{goal_id}/launch", response_model=MissionLaunchResponse)
-async def launch_mission(goal_id: UUID):
+async def launch_mission(goal_id: UUID, background_tasks: BackgroundTasks):
     """
     Launch a mission for a goal.
 
-    This triggers the full agent orchestration pipeline:
-    GoalManager → Planner → Decomposer → Executor → Critic → Verifier
+    Triggers the full agent orchestration pipeline in the background:
+    GoalManager → Planner → Decomposer → Executor → Critic → Verifier → Memory → Monitor
     """
     db = get_db()
 
@@ -64,23 +98,19 @@ async def launch_mission(goal_id: UUID):
     if not goal.data:
         raise HTTPException(status_code=404, detail="Goal not found")
 
-    # Update goal status
+    # Prevent re-launching already running goals
+    if goal.data[0]["status"] == "running":
+        raise HTTPException(status_code=409, detail="Goal is already running")
+
+    # Update goal status to running
     db.table("goals").update({"status": "running"}).eq("id", str(goal_id)).execute()
 
-    # TODO: Trigger orchestrator pipeline (Phase 2)
-    # For now, create a placeholder plan
-    plan_result = db.table("plans").insert({
-        "goal_id": str(goal_id),
-        "plan_json": {"steps": [], "status": "pending"},
-        "score": 0.0,
-    }).execute()
-
-    if not plan_result.data:
-        raise HTTPException(status_code=500, detail="Failed to create plan")
+    # Launch the orchestrator pipeline in background
+    background_tasks.add_task(_execute_mission, str(goal_id))
 
     return MissionLaunchResponse(
         goal_id=goal_id,
-        plan_id=plan_result.data[0]["id"],
+        plan_id=goal_id,  # Plan ID assigned during execution
         status="launched",
-        message="Mission launched — orchestrator will process the goal",
+        message="Mission launched — agents are processing the goal",
     )

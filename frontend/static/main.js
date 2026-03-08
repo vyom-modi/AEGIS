@@ -174,45 +174,83 @@ async function loadMission() {
     const goalId = params.get('goal_id');
 
     if (!goalId) {
-        document.getElementById('mission-content').innerHTML = `
-            <div class="empty-state">
-                <div class="icon">📋</div>
-                <p>Select a goal from the dashboard to view its mission.</p>
-            </div>
-        `;
+        const content = document.getElementById('mission-content');
+        if (content) {
+            content.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <p>Select a goal from the dashboard to view its mission.</p>
+                </div>
+            `;
+        }
         return;
     }
 
     try {
-        const [goal, plans] = await Promise.all([
-            api.get(`/goals/${goalId}`),
-            api.get(`/plans/${goalId}`),
-        ]);
+        const data = await api.get(`/missions/${goalId}/status`);
+        const { goal, plans, tasks, runs } = data;
 
-        document.getElementById('mission-title').textContent = goal.title;
-        document.getElementById('mission-status').className = `badge badge-${goal.status}`;
-        document.getElementById('mission-status').textContent = goal.status;
+        const titleEl = document.getElementById('mission-title');
+        const statusEl = document.getElementById('mission-status');
+        if (titleEl) titleEl.textContent = goal.title;
+        if (statusEl) {
+            statusEl.className = `badge badge-${goal.status}`;
+            statusEl.textContent = goal.status;
+        }
 
+        // Render plans
         const plansContainer = document.getElementById('plans-list');
-        if (plans.length === 0) {
-            plansContainer.innerHTML = '<p class="empty-state">No plans generated yet.</p>';
-        } else {
-            plansContainer.innerHTML = plans.map(plan => `
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <span class="card-title">Plan</span>
-                        <span class="badge badge-${plan.score > 0.5 ? 'completed' : 'pending'}">
-                            Score: ${(plan.score * 100).toFixed(0)}%
-                        </span>
+        if (plansContainer) {
+            if (plans.length === 0) {
+                plansContainer.innerHTML = '<p class="empty-state">No plans generated yet.</p>';
+            } else {
+                plansContainer.innerHTML = plans.map(plan => `
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <span class="card-title">Plan</span>
+                            <span class="badge badge-${plan.score > 0.5 ? 'completed' : 'pending'}">
+                                Score: ${(plan.score * 100).toFixed(0)}%
+                            </span>
+                        </div>
+                        <div class="plan-steps">
+                            ${(plan.plan_json.steps || []).map((step, i) => `
+                                <div class="log-line">${i + 1}. ${escapeHtml(step.name || 'Unnamed step')}</div>
+                            `).join('')}
+                        </div>
                     </div>
-                    <div class="plan-steps">
-                        ${(plan.plan_json.steps || []).map((step, i) => `
-                            <div class="log-line">${i + 1}. ${escapeHtml(step.name || 'Unnamed step')}</div>
-                        `).join('')}
-                    </div>
+                `).join('');
+            }
+        }
+
+        // Render tasks
+        const tasksContainer = document.getElementById('tasks-list');
+        if (tasksContainer) {
+            if (tasks.length === 0) {
+                tasksContainer.innerHTML = '<tr><td colspan="4" class="empty-state">No tasks yet.</td></tr>';
+            } else {
+                tasksContainer.innerHTML = tasks.map(task => `
+                    <tr class="fade-in">
+                        <td><strong>${escapeHtml(task.name)}</strong></td>
+                        <td>${escapeHtml(task.assigned_agent || '—')}</td>
+                        <td><span class="badge badge-${task.status}">${task.status}</span></td>
+                        <td>${task.retries}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Render logs from runs
+        const logPanel = document.getElementById('log-panel');
+        if (logPanel && runs.length > 0) {
+            logPanel.innerHTML = runs.map(run => `
+                <div class="log-line ${run.success ? 'success' : 'error'}">
+                    ${escapeHtml(run.logs || 'No output')}
                 </div>
             `).join('');
+        } else if (logPanel) {
+            logPanel.innerHTML = '<div class="log-line info">No execution logs yet.</div>';
         }
+
     } catch (err) {
         console.error('Failed to load mission:', err);
     }
