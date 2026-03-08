@@ -112,6 +112,7 @@ async function loadMetrics() {
     try {
         const goals = await api.get('/goals');
         const metrics = await api.get('/metrics');
+        const tools = await api.get('/tools');
 
         const totalGoals = goals.length;
         const activeStates = ['running', 'active', 'launched', 'pending'];
@@ -132,11 +133,8 @@ async function loadMetrics() {
             ? (allLatencies.reduce((sum, m) => sum + m.value, 0) / allLatencies.length).toFixed(2)
             : null;
 
-        // Total tools from DB
-        const toolsMetrics = metrics.filter(m => m.metric_name === 'tools_generated');
-        const totalTools = toolsMetrics.length > 0
-            ? toolsMetrics.reduce((sum, m) => sum + m.value, 0)
-            : 0;
+        // Total tools straight from DB
+        const totalTools = tools.length;
 
         // Total tasks executed
         const taskMetrics = metrics.filter(m => m.metric_name === 'tasks_executed');
