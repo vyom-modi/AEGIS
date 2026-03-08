@@ -6,6 +6,15 @@
 Browser  →  Oat UI Frontend  →  FastAPI Backend  →  Supabase DB  →  LLM APIs
 ```
 
+## Features
+
+- **Agentic Orchestration:** Multi-agent pipeline via LangGraph (Planner, Executor, Critic, Monitor, Toolsmith, etc.)
+- **First-Class Anthropic Skills:** Natively browse, import, and install [Anthropic Agent Skills](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo/skills) directly from their GitHub.
+- **Auto-Tool Generation:** Automatically converts instructional markdown (`SKILL.md`) into executable Python tools using the Toolsmith agent, with fallback to standard-library-only code generation if blocked imports are detected.
+- **Skill-Aware Planning:** Goals created from skills automatically pass the context to the Planner, ensuring that the pre-installed tools are heavily utilized in the execution plan.
+- **Sandboxed Execution:** Tools are executed securely inside a local subprocess or E2B cloud sandbox.
+- **Live Telemetry & UI:** Clean Oat UI frontend to track active goals, live mission logs, auto-polling telemetry, and self-improvement metrics.
+
 ## Architecture
 
 AEGIS is built around a multi-agent orchestration system powered by LangGraph. Each agent has a specific role in the autonomous pipeline:
@@ -137,6 +146,7 @@ AEGIS/
 │       ├── models/          # Pydantic schemas
 │       ├── orchestrator/    # LangGraph workflow
 │       ├── sandbox/         # Code execution sandbox
+│       ├── skills/          # Anthropic skills sync, parser, generator, and trust scoring
 │       ├── config.py        # Environment configuration
 │       ├── database.py      # Supabase client
 │       ├── llm.py           # LLM provider setup
