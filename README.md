@@ -119,10 +119,14 @@ Open `frontend/templates/dashboard.html` in your browser. The frontend connects 
 | `POST` | `/api/goals` | Create a new goal |
 | `GET` | `/api/goals` | List all goals |
 | `POST` | `/api/goals/{id}/launch` | Launch a mission for a goal |
+| `GET` | `/api/missions/{goal_id}/status` | Get real-time mission status, plans, tasks, and logs |
 | `GET` | `/api/plans/{goal_id}` | Get plans for a goal |
 | `GET` | `/api/tasks/{task_id}` | Get task details |
 | `POST` | `/api/tools` | Register a tool |
 | `GET` | `/api/metrics` | Get telemetry data |
+| `GET` | `/api/skills` | List available Anthropic skills |
+| `POST` | `/api/skills/sync` | Sync skills from Anthropic repository |
+| `POST` | `/api/skills/{id}/install` | Convert a skill into an executable tool |
 | `WS` | `/ws/logs/{task_id}` | Stream live logs |
 
 ## Example Mission
@@ -170,7 +174,8 @@ AEGIS/
 │   ├── templates/           # HTML pages
 │   └── static/              # JS and CSS
 ├── supabase/
-│   └── schema.sql           # Database schema
+│   ├── schema.sql           # Database core schema
+│   └── skills_migration.sql # Anthropic skills schema
 ├── .env.example
 └── README.md
 ```
