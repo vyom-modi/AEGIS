@@ -2,57 +2,110 @@
 Toolsmith Agent.
 
 Responsible for:
-- Generating Python tools automatically
+- Generating Python tools automatically via LLM
 - Registering tools in Supabase
-- Validating tools before use
+- Validating generated code before storage
 """
 
+import json
 from typing import Any
 from app.agents.base import BaseAgent
 from app.database import get_db
 from app.llm import get_llm
+from app.sandbox.runner import validate_code
 
 
 TOOLSMITH_PROMPT = """You are a tool-creating agent in the AEGIS autonomous system.
-Given a task description, generate a Python tool that accomplishes it.
+Generate a Python tool for the following task.
 
-Task: {task_description}
+Task: {task_name}
+Description: {task_description}
 
-The tool must follow this format:
+The tool MUST follow this exact format:
 ```python
 def run(input: dict) -> dict:
-    \"\"\"Brief description of what this tool does.\"\"\"
-    # Implementation
-    return {{"result": "output"}}
+    \"\"\"Brief description.\"\"\"
+    # Implementation using only standard library
+    return {{"result": "output", "success": True}}
 ```
 
-Requirements:
-- Use only standard library imports
-- Handle errors gracefully
-- Return results as a dict
-- Keep it simple and focused
+Rules:
+- Use ONLY standard library imports (json, math, datetime, re, collections, etc.)
+- Do NOT import: os, sys, subprocess, socket, http, urllib, pathlib
+- Handle errors with try/except
+- Return a dict with at least "result" and "success" keys
+- Keep the function focused and under 30 lines
 
-Respond with ONLY the Python code, no markdown formatting."""
+Return ONLY the Python code. No markdown, no explanation."""
 
 
 class ToolsmithAgent(BaseAgent):
     name = "toolsmith"
 
     async def execute(self, state: dict[str, Any]) -> dict[str, Any]:
-        """Generate tools for steps that require them."""
+        """Generate and register tools for steps that require them."""
         plan = state.get("plan", {})
         steps = plan.get("steps", [])
+        db = get_db()
 
         tools_created = []
         for step in steps:
-            if step.get("requires_tool"):
-                # TODO: Generate and register tool via LLM
-                tools_created.append(step.get("name"))
+            if not step.get("requires_tool"):
+                continue
+
+            task_name = step.get("name", "Unknown task")
+            task_desc = step.get("description", "")
+
+            try:
+                llm = get_llm()
+                prompt = TOOLSMITH_PROMPT.format(
+                    task_name=task_name,
+                    task_description=task_desc,
+                )
+
+                response = await llm.ainvoke(prompt)
+                code = response.content.strip()
+
+                # Clean markdown code blocks if present
+                if "```" in code:
+                    parts = code.split("```")
+                    code = parts[1] if len(parts) > 1 else code
+                    if code.startswith("python"):
+                        code = code[6:]
+                    code = code.strip()
+
+                # Validate the generated code
+                is_valid, error = validate_code(code)
+                if not is_valid:
+                    state["logs"] = state.get("logs", []) + [
+                        f"[Toolsmith] Tool for '{task_name}' failed validation: {error}"
+                    ]
+                    continue
+
+                # Register the tool in Supabase
+                tool_record = db.table("tools").insert({
+                    "name": task_name.lower().replace(" ", "_"),
+                    "description": task_desc[:200],
+                    "code": code,
+                    "trust_score": 0.7,  # Initial trust score
+                }).execute()
+
+                if tool_record.data:
+                    tools_created.append({
+                        "name": task_name,
+                        "tool_id": tool_record.data[0]["id"],
+                    })
+
+            except Exception as e:
+                state["logs"] = state.get("logs", []) + [
+                    f"[Toolsmith] Failed to generate tool for '{task_name}': {e}"
+                ]
 
         state["tools_created"] = tools_created
         state["current_agent"] = self.name
         state["logs"] = state.get("logs", []) + [
-            f"[Toolsmith] Created {len(tools_created)} tools"
+            f"[Toolsmith] Created {len(tools_created)} tools: "
+            + ", ".join(t["name"] for t in tools_created)
         ]
 
         return state
