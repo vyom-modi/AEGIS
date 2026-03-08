@@ -26,6 +26,8 @@ class SkillInstallResponse(BaseModel):
     tool_name: str | None = None
     trust_score: float = 0.0
     recommendation: str = ""
+    breakdown: dict | None = None
+    generated_by_llm: bool = False
     error: str | None = None
 
 
@@ -123,6 +125,8 @@ async def install_skill(skill_id: UUID):
         tool_name=result.get("tool_name"),
         trust_score=result.get("trust_score", 0),
         recommendation=result.get("recommendation", ""),
+        breakdown=result.get("breakdown"),
+        generated_by_llm=result.get("generated_by_llm", False),
     )
 
 
