@@ -19,12 +19,16 @@ router = APIRouter(prefix="/goals", tags=["goals"])
 async def create_goal(goal: GoalCreate):
     """Create a new goal."""
     db = get_db()
-    result = db.table("goals").insert({
+    insert_data = {
         "title": goal.title,
         "description": goal.description,
         "status": "pending",
         "schedule": goal.schedule,
-    }).execute()
+    }
+    if goal.skill_id:
+        insert_data["skill_id"] = goal.skill_id
+
+    result = db.table("goals").insert(insert_data).execute()
 
     if not result.data:
         raise HTTPException(status_code=500, detail="Failed to create goal")

@@ -19,6 +19,7 @@ class GoalCreate(BaseModel):
     title: str
     description: str
     schedule: Optional[str] = None
+    skill_id: Optional[str] = None
 
 
 class GoalResponse(BaseModel):
@@ -28,6 +29,7 @@ class GoalResponse(BaseModel):
     description: str
     status: str = "pending"
     schedule: Optional[str] = None
+    skill_id: Optional[str] = None
     created_at: datetime
     last_run_at: Optional[datetime] = None
 

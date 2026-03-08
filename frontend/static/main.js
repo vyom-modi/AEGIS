@@ -74,6 +74,12 @@ async function createGoal(event) {
         schedule: form.querySelector('#goal-schedule')?.value || null,
     };
 
+    // Include skill_id if set by autofill
+    const skillIdField = form.querySelector('#goal-skill-id');
+    if (skillIdField && skillIdField.value) {
+        data.skill_id = skillIdField.value;
+    }
+
     try {
         await api.post('/goals', data);
         form.reset();
@@ -363,6 +369,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (titleInput) titleInput.value = params.get('title') || '';
         if (descInput) descInput.value = params.get('description') || '';
+
+        // Set skill_id in hidden field
+        const skillId = params.get('skill_id');
+        if (skillId) {
+            let hiddenField = document.getElementById('goal-skill-id');
+            if (!hiddenField) {
+                // Create hidden input dynamically
+                hiddenField = document.createElement('input');
+                hiddenField.type = 'hidden';
+                hiddenField.id = 'goal-skill-id';
+                hiddenField.name = 'skill_id';
+                const form = document.querySelector('#create-goal-modal form');
+                if (form) form.appendChild(hiddenField);
+            }
+            hiddenField.value = skillId;
+        }
 
         openModal('create-goal-modal');
 

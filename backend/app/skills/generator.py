@@ -2,13 +2,12 @@
 Skill Tool Generator.
 
 Converts Anthropic Agent Skills into AEGIS tools:
-1. Skills with Python code fences → extract and wrap as run() tool
-2. Instructional skills → LLM generates a tool skeleton from description
-3. Validates generated code via sandbox runner
+1. Skills with clean Python code → extract and wrap as run() tool
+2. Skills with blocked imports OR instructional → LLM generates safe wrapper
+3. Validates generated code
 4. Computes trust score and registers in Supabase
 """
 
-import json
 from typing import Any
 from app.database import get_db
 from app.llm import get_llm
@@ -22,7 +21,8 @@ Generate a Python tool based on this Anthropic Agent Skill.
 
 Skill Name: {name}
 Skill Description: {description}
-Skill Type: {skill_type}
+
+{context_section}
 
 The tool MUST follow this exact format:
 ```python
@@ -34,11 +34,11 @@ def run(input: dict) -> dict:
 
 Rules:
 - Use ONLY standard library imports (json, math, datetime, re, collections, etc.)
-- Do NOT import: os, sys, subprocess, socket, http, urllib, pathlib
+- Do NOT import: os, sys, subprocess, socket, http, urllib, pathlib, playwright
 - Handle errors with try/except
 - Return a dict with "result" and "success" keys
-- Model the tool's behavior based on the skill description
-- Keep the function focused and under 30 lines
+- The tool should simulate or demonstrate the skill's core behavior
+- Keep the function focused and under 40 lines
 
 Return ONLY the Python code. No markdown, no explanation."""
 
@@ -50,7 +50,7 @@ async def generate_tool_from_skill(skill_id: str) -> dict[str, Any]:
     Process:
     1. Fetch skill from Supabase
     2. Parse skill markdown for code blocks
-    3. Generate or extract tool code
+    3. Try extracted code; if blocked imports, fall back to LLM
     4. Validate code safety
     5. Compute trust score
     6. Register tool in Supabase
@@ -75,39 +75,53 @@ async def generate_tool_from_skill(skill_id: str) -> dict[str, Any]:
     generated_by_llm = False
 
     if python_blocks:
-        # Use the best Python code block
+        # Try the best code block first
         best_block = _select_best_code_block(python_blocks)
-        code = _wrap_as_tool(best_block, parsed["name"], parsed["description"])
+        wrapped = _wrap_as_tool(best_block, parsed["name"], parsed["description"])
+
+        # Validate — if blocked imports, fall back to LLM
+        is_valid, _ = validate_code(wrapped)
+        if is_valid:
+            code = wrapped
+        else:
+            # Extracted code has blocked imports, use LLM instead
+            code = await _generate_with_llm(parsed, python_blocks)
+            generated_by_llm = True
     else:
-        # LLM-assisted generation
+        # No Python code in skill, generate via LLM
         code = await _generate_with_llm(parsed)
         generated_by_llm = True
 
     if not code:
         return {"success": False, "error": "Could not generate tool code"}
 
-    # Validate
+    # Final validation
     is_valid, error = validate_code(code)
+
+    if not is_valid:
+        # One more attempt: strip any problematic lines and retry LLM
+        code = await _generate_with_llm(parsed)
+        generated_by_llm = True
+        if code:
+            is_valid, error = validate_code(code)
+
+    if not code or not is_valid:
+        return {
+            "success": False,
+            "error": f"Generated code failed validation: {error}",
+        }
 
     # Compute trust score
     is_anthropic = "anthropics/skills" in (skill.get("source_url") or "")
     trust_result = compute_trust_score(
         license_text=skill.get("license"),
         code_validates=is_valid,
-        has_blocked_imports=not is_valid,
+        has_blocked_imports=False,  # We validated it passed
         is_anthropic_official=is_anthropic,
         has_python_code=bool(python_blocks),
     )
 
-    if not is_valid and trust_result["recommendation"] == "blocked":
-        return {
-            "success": False,
-            "error": f"Tool blocked: {error}",
-            "trust_score": trust_result["trust_score"],
-            "breakdown": trust_result["breakdown"],
-        }
-
-    # Register tool
+    # Register tool in Supabase
     tool_name = parsed["name"].lower().replace(" ", "_").replace("-", "_")
     tool_record = db.table("tools").insert({
         "name": f"skill_{tool_name}",
@@ -141,23 +155,19 @@ async def generate_tool_from_skill(skill_id: str) -> dict[str, Any]:
 
 def _select_best_code_block(blocks: list[dict]) -> str:
     """Select the most meaningful Python code block."""
-    # Prefer blocks with function definitions
     for block in blocks:
         if "def " in block["code"]:
             return block["code"]
 
-    # Prefer longer blocks
     blocks.sort(key=lambda b: len(b["code"]), reverse=True)
     return blocks[0]["code"]
 
 
 def _wrap_as_tool(code: str, name: str, description: str) -> str:
     """Wrap extracted Python code as an AEGIS tool with run() function."""
-    # If it already has a run() function, use as-is
     if "def run(" in code:
         return code
 
-    # Wrap the code in a run() function
     indented = "\n".join(f"    {line}" for line in code.split("\n"))
 
     return f'''def run(input: dict) -> dict:
@@ -169,14 +179,32 @@ def _wrap_as_tool(code: str, name: str, description: str) -> str:
         return {{"result": str(e), "success": False}}'''
 
 
-async def _generate_with_llm(parsed: dict) -> str | None:
-    """Use LLM to generate a tool from the skill description."""
+async def _generate_with_llm(
+    parsed: dict,
+    code_blocks: list[dict] | None = None,
+) -> str | None:
+    """Use LLM to generate a safe tool from the skill description."""
     try:
         llm = get_llm()
+
+        # Provide code context if available (so LLM understands the pattern)
+        context_section = ""
+        if code_blocks:
+            # Show the code as reference but instruct LLM to rewrite safely
+            sample = code_blocks[0]["code"][:300]
+            context_section = (
+                f"The skill contains this reference code (uses blocked imports, "
+                f"rewrite using only stdlib):\n```\n{sample}\n```"
+            )
+        elif parsed.get("examples"):
+            context_section = (
+                f"Skill examples:\n{parsed['examples'][0][:300]}"
+            )
+
         prompt = TOOL_GEN_PROMPT.format(
             name=parsed["name"],
             description=parsed["description"][:300],
-            skill_type=parsed["skill_type"],
+            context_section=context_section,
         )
 
         response = await llm.ainvoke(prompt)
