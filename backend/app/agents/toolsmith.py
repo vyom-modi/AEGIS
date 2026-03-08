@@ -39,6 +39,45 @@ Rules:
 Return ONLY the Python code. No markdown, no explanation."""
 
 
+def _compute_trust_score(code: str) -> float:
+    """
+    Compute initial trust score for generated tool code.
+
+    Scores based on:
+    - Has a docstring (+0.1)
+    - Has try/except error handling (+0.15)
+    - Returns dict with 'success' key (+0.1)
+    - Has a run() function (+0.15)
+    - Under 30 lines (+0.1)
+    - Uses only standard lib (+0.1)
+    - Base score: 0.3
+    """
+    score = 0.3
+
+    if '"""' in code or "'''" in code:
+        score += 0.1
+
+    if "try:" in code and "except" in code:
+        score += 0.15
+
+    if '"success"' in code or "'success'" in code:
+        score += 0.1
+
+    if "def run(" in code:
+        score += 0.15
+
+    lines = code.strip().split("\n")
+    if len(lines) <= 30:
+        score += 0.1
+
+    # Penalize for using non-standard imports
+    non_std = ["pandas", "numpy", "requests", "beautifulsoup", "scrapy"]
+    if not any(lib in code.lower() for lib in non_std):
+        score += 0.1
+
+    return round(min(score, 1.0), 2)
+
+
 class ToolsmithAgent(BaseAgent):
     name = "toolsmith"
 
@@ -82,12 +121,15 @@ class ToolsmithAgent(BaseAgent):
                     ]
                     continue
 
+                # Compute initial trust score based on code quality
+                trust_score = _compute_trust_score(code)
+
                 # Register the tool in Supabase
                 tool_record = db.table("tools").insert({
                     "name": task_name.lower().replace(" ", "_"),
                     "description": task_desc[:200],
                     "code": code,
-                    "trust_score": 0.7,  # Initial trust score
+                    "trust_score": trust_score,
                 }).execute()
 
                 if tool_record.data:

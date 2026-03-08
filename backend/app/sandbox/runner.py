@@ -11,6 +11,7 @@ timeout and memory limits.
 
 import subprocess
 import asyncio
+import os
 from typing import Optional
 from app.config import get_settings
 
@@ -49,12 +50,7 @@ async def run_in_e2b(code: str, timeout: int = 30) -> dict:
     """
     Execute code in an E2B cloud sandbox.
 
-    Args:
-        code: Python code to execute.
-        timeout: Max execution time in seconds.
-
-    Returns:
-        Dict with stdout, stderr, and success status.
+    Uses the v2 E2B API: Sandbox.create() with env-based API key.
     """
     settings = get_settings()
     if not settings.e2b_api_key:
@@ -63,30 +59,51 @@ async def run_in_e2b(code: str, timeout: int = 30) -> dict:
     try:
         from e2b_code_interpreter import Sandbox
 
-        sandbox = Sandbox(api_key=settings.e2b_api_key)
-        execution = sandbox.run_code(code, timeout=timeout)
-        sandbox.close()
+        # Set API key via environment variable (E2B v2 convention)
+        os.environ["E2B_API_KEY"] = settings.e2b_api_key
 
-        return {
-            "success": not execution.error,
-            "stdout": execution.text,
-            "stderr": str(execution.error) if execution.error else "",
-            "results": [str(r) for r in execution.results],
-        }
+        sandbox = Sandbox.create(timeout=timeout)
+        try:
+            execution = sandbox.run_code(code, timeout=timeout)
+
+            # Collect stdout text
+            stdout_lines = []
+            if execution.logs and execution.logs.stdout:
+                stdout_lines = [msg.line for msg in execution.logs.stdout]
+
+            stderr_lines = []
+            if execution.logs and execution.logs.stderr:
+                stderr_lines = [msg.line for msg in execution.logs.stderr]
+
+            # Collect results
+            result_texts = []
+            if execution.results:
+                for r in execution.results:
+                    if hasattr(r, "text") and r.text:
+                        result_texts.append(r.text)
+                    else:
+                        result_texts.append(str(r))
+
+            return {
+                "success": execution.error is None,
+                "stdout": "\n".join(stdout_lines),
+                "stderr": "\n".join(stderr_lines),
+                "results": result_texts,
+                "error": str(execution.error) if execution.error else "",
+            }
+        finally:
+            try:
+                sandbox.kill()
+            except Exception:
+                pass
+
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": f"E2B error: {str(e)}"}
 
 
 async def run_in_subprocess(code: str, timeout: int = 10) -> dict:
     """
     Execute code in a restricted subprocess (fallback).
-
-    Args:
-        code: Python code to execute.
-        timeout: Max execution time in seconds.
-
-    Returns:
-        Dict with stdout, stderr, and success status.
     """
     is_valid, error = validate_code(code)
     if not is_valid:
@@ -94,7 +111,7 @@ async def run_in_subprocess(code: str, timeout: int = 10) -> dict:
 
     try:
         process = await asyncio.create_subprocess_exec(
-            "python", "-c", code,
+            "python3", "-c", code,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -105,8 +122,9 @@ async def run_in_subprocess(code: str, timeout: int = 10) -> dict:
 
         return {
             "success": process.returncode == 0,
-            "stdout": stdout.decode(),
-            "stderr": stderr.decode(),
+            "stdout": stdout.decode().strip(),
+            "stderr": stderr.decode().strip(),
+            "error": stderr.decode().strip() if process.returncode != 0 else "",
         }
     except asyncio.TimeoutError:
         process.kill()
@@ -128,6 +146,10 @@ async def execute_code(
     settings = get_settings()
 
     if use_e2b and settings.e2b_api_key:
-        return await run_in_e2b(code, timeout)
+        result = await run_in_e2b(code, timeout)
+        # If E2B fails due to API issues, fall back to subprocess
+        if not result["success"] and "E2B error" in result.get("error", ""):
+            return await run_in_subprocess(code, timeout)
+        return result
     else:
         return await run_in_subprocess(code, timeout)

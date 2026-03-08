@@ -24,13 +24,15 @@ class ExecutorAgent(BaseAgent):
         steps = plan.get("steps", [])
         db = get_db()
 
-        # Build a lookup of generated tools by name
+        # Build a lookup of generated tools by name → code and name → id
         tools_map = {}
+        tools_ids = {}
         tools_created = state.get("tools_created", [])
         for tool in tools_created:
             tool_name = tool.get("name", "").lower().replace(" ", "_")
             tool_id = tool.get("tool_id")
             if tool_id:
+                tools_ids[tool_name] = tool_id
                 try:
                     record = db.table("tools").select("code").eq("id", tool_id).execute()
                     if record.data:
@@ -61,6 +63,7 @@ class ExecutorAgent(BaseAgent):
                 # Try to execute the generated tool in sandbox
                 tool_key = step_name.lower().replace(" ", "_")
                 code = tools_map.get(tool_key, "")
+                tool_id = tools_ids.get(tool_key)
 
                 if code:
                     # Wrap tool code with a run() call
@@ -77,6 +80,18 @@ class ExecutorAgent(BaseAgent):
                         sandbox_result.get("stdout", "")
                         or sandbox_result.get("error", "No output")
                     )
+
+                    # Update tool trust score based on execution result
+                    if tool_id:
+                        try:
+                            tool_rec = db.table("tools").select("trust_score").eq("id", tool_id).execute()
+                            if tool_rec.data:
+                                old_score = tool_rec.data[0]["trust_score"]
+                                # Boost on success, penalize on failure
+                                new_score = min(old_score + 0.1, 1.0) if success else max(old_score - 0.15, 0.1)
+                                db.table("tools").update({"trust_score": round(new_score, 2)}).eq("id", tool_id).execute()
+                        except Exception:
+                            pass
                 else:
                     success = True
                     logs = f"Tool not found for '{step_name}', marking as simulated"
