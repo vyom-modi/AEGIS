@@ -201,7 +201,7 @@ async function loadTools() {
     }
 }
 
-// ── Plans / Mission ─────────────────────────
+let missionPollTimer = null;
 
 async function loadMission() {
     const params = new URLSearchParams(window.location.search);
@@ -281,8 +281,22 @@ async function loadMission() {
                     ${escapeHtml(run.logs || 'No output')}
                 </div>
             `).join('');
+            logPanel.scrollTop = logPanel.scrollHeight;
         } else if (logPanel) {
             logPanel.innerHTML = '<div class="log-line info">No execution logs yet.</div>';
+        }
+
+        // Auto-poll while mission is running
+        if (goal.status === 'running') {
+            if (!missionPollTimer) {
+                missionPollTimer = setInterval(() => loadMission(), 3000);
+            }
+        } else {
+            // Mission finished — stop polling
+            if (missionPollTimer) {
+                clearInterval(missionPollTimer);
+                missionPollTimer = null;
+            }
         }
 
     } catch (err) {
@@ -354,12 +368,33 @@ function setActiveNav() {
 
 // ── Init ────────────────────────────────────
 
+let dashboardPollTimer = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     setActiveNav();
     loadGoals();
     loadMetrics();
     loadTools();
     loadMission();
+
+    // Auto-refresh dashboard while goals are running
+    const isDashboard = window.location.pathname === '/';
+    if (isDashboard) {
+        dashboardPollTimer = setInterval(async () => {
+            try {
+                const goals = await api.get('/goals');
+                const hasRunning = goals.some(g => g.status === 'running');
+                if (hasRunning) {
+                    loadGoals();
+                    loadMetrics();
+                } else if (dashboardPollTimer) {
+                    // No running goals, stop polling
+                    clearInterval(dashboardPollTimer);
+                    dashboardPollTimer = null;
+                }
+            } catch (e) { /* ignore */ }
+        }, 5000);
+    }
 
     // Handle autofill from Skill Browser preview
     const params = new URLSearchParams(window.location.search);
