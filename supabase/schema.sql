@@ -102,6 +102,30 @@ CREATE TABLE IF NOT EXISTS strategies (
 );
 
 
+-- ── Skills ───────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS skills (
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    name            text NOT NULL,
+    slug            text UNIQUE,
+    description     text DEFAULT '',
+    version         text,
+    license         text,
+    source_url      text,
+    raw_markdown    text,
+    metadata        jsonb DEFAULT '{}',
+    trust_score     float DEFAULT 0,
+    installed       boolean DEFAULT false,
+    installed_at    timestamptz,
+    last_scanned_at timestamptz,
+    created_at      timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_skills_slug ON skills(slug);
+CREATE INDEX IF NOT EXISTS idx_skills_installed ON skills(installed);
+CREATE INDEX IF NOT EXISTS idx_skills_trust ON skills(trust_score DESC);
+
+
 -- ── Row Level Security ───────────────────────
 -- Disable RLS for service_role access (backend uses service key)
 
@@ -112,6 +136,7 @@ ALTER TABLE runs       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tools      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE metrics    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE strategies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE skills     ENABLE ROW LEVEL SECURITY;
 
 -- Allow full access for service_role
 CREATE POLICY "Service role full access" ON goals      FOR ALL USING (true) WITH CHECK (true);
@@ -121,3 +146,5 @@ CREATE POLICY "Service role full access" ON runs       FOR ALL USING (true) WITH
 CREATE POLICY "Service role full access" ON tools      FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role full access" ON metrics    FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Service role full access" ON strategies FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access" ON skills     FOR ALL USING (true) WITH CHECK (true);
+

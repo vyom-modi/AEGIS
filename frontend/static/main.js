@@ -354,4 +354,19 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMetrics();
     loadTools();
     loadMission();
+
+    // Handle autofill from Skill Browser preview
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('autofill') === '1') {
+        const titleInput = document.getElementById('goal-title');
+        const descInput = document.getElementById('goal-description');
+
+        if (titleInput) titleInput.value = params.get('title') || '';
+        if (descInput) descInput.value = params.get('description') || '';
+
+        openModal('create-goal-modal');
+
+        // Clean URL
+        window.history.replaceState({}, '', '/');
+    }
 });

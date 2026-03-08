@@ -83,6 +83,12 @@ async def serve_agents():
     return FileResponse(str(FRONTEND_DIR / "templates" / "agents.html"))
 
 
+@app.get("/skills")
+async def serve_skills():
+    """Serve the skills browser page."""
+    return FileResponse(str(FRONTEND_DIR / "templates" / "skills.html"))
+
+
 # ── WebSocket — Live Logs ─────────────────────
 
 class ConnectionManager:

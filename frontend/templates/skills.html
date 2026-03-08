@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEGIS — Skills</title>
+    <meta name="description" content="AEGIS Skill Browser — Browse, import, and install Anthropic Agent Skills">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        .skill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+        }
+
+        .skill-card {
+            background: var(--oat-bg-alt);
+            border: 1px solid var(--oat-border);
+            border-radius: var(--aegis-radius);
+            padding: 1.25rem;
+            transition: all var(--aegis-transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .skill-card:hover {
+            border-color: var(--oat-primary);
+            box-shadow: var(--aegis-glow);
+            transform: translateY(-2px);
+        }
+
+        .skill-card .skill-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.4rem;
+            color: var(--oat-fg);
+        }
+
+        .skill-card .skill-desc {
+            font-size: 0.85rem;
+            color: var(--oat-fg-alt);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .skill-card .skill-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+        }
+
+        .skill-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.15rem 0.5rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .skill-badge.license {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+        }
+
+        .skill-badge.type-exec {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .skill-badge.type-inst {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        .skill-badge.installed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .trust-bar {
+            height: 4px;
+            background: var(--oat-border);
+            border-radius: 100px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .trust-bar .fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 0.4s ease;
+        }
+
+        .trust-bar .fill.high {
+            background: #10b981;
+        }
+
+        .trust-bar .fill.mid {
+            background: #f59e0b;
+        }
+
+        .trust-bar .fill.low {
+            background: #ef4444;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .action-bar .btn {
+            font-size: 0.85rem;
+        }
+
+        .import-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.5rem 0.75rem;
+            background: var(--oat-bg-alt);
+            border: 1px solid var(--oat-border);
+            border-radius: var(--aegis-radius);
+            color: var(--oat-fg);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .import-input:focus {
+            border-color: var(--oat-primary);
+            outline: none;
+        }
+
+        .sync-status {
+            font-size: 0.8rem;
+            color: var(--oat-fg-alt);
+            margin-left: 0.5rem;
+        }
+
+        /* Skill Detail Modal */
+        .skill-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .skill-detail-body {
+            max-height: 50vh;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--aegis-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: var(--oat-fg-alt);
+        }
+
+        .trust-breakdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .trust-item {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: var(--aegis-radius);
+        }
+
+        .trust-item .label {
+            font-size: 0.7rem;
+            color: var(--oat-fg-alt);
+            text-transform: uppercase;
+        }
+
+        .trust-item .value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--oat-fg);
+        }
+
+        .empty-skills {
+            text-align: center;
+            padding: 3rem;
+            color: var(--oat-fg-alt);
+        }
+
+        .empty-skills .emoji {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn {
+            padding: 0.35rem 0.75rem;
+            border-radius: 100px;
+            border: 1px solid var(--oat-border);
+            background: transparent;
+            color: var(--oat-fg-alt);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            border-color: var(--oat-primary);
+            color: var(--oat-primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo">Δ</div>
+                <h1>AEGIS</h1>
+            </div>
+            <nav>
+                <a href="/">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/mission">
+                    <span class="icon">🚀</span>
+                    <span>Missions</span>
+                </a>
+                <a href="/tools">
+                    <span class="icon">🔧</span>
+                    <span>Tools</span>
+                </a>
+                <a href="/agents">
+                    <span class="icon">🤖</span>
+                    <span>Agents</span>
+                </a>
+                <a href="/skills" class="active">
+                    <span class="icon">🧩</span>
+                    <span>Skills</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <h2>Skill Browser</h2>
+                <p>Browse, import, and install Anthropic Agent Skills as AEGIS tools.</p>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <button class="btn btn-primary btn-sm" id="sync-btn" onclick="syncSkills()">
+                    ⟳ Sync from Anthropic
+                </button>
+                <input type="text" class="import-input" id="import-url"
+                    placeholder="Import by URL — paste a SKILL.md link...">
+                <button class="btn btn-secondary btn-sm" onclick="importSkillUrl()">
+                    Import
+                </button>
+                <span class="sync-status" id="sync-status"></span>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="filterSkills('all', this)">All</button>
+                <button class="filter-btn" onclick="filterSkills('executable', this)">Executable</button>
+                <button class="filter-btn" onclick="filterSkills('instructional', this)">Instructional</button>
+                <button class="filter-btn" onclick="filterSkills('installed', this)">Installed</button>
+            </div>
+
+            <!-- Skills Grid -->
+            <div class="skill-grid" id="skills-grid">
+                <div class="empty-skills">
+                    <div class="emoji">🧩</div>
+                    <p>No skills loaded yet. Click <strong>"Sync from Anthropic"</strong> to fetch the catalog.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Skill Detail Modal -->
+    <div id="skill-detail-modal" class="modal-backdrop">
+        <div class="modal" style="max-width: 700px;">
+            <div class="skill-detail-header">
+                <div>
+                    <h3 id="detail-name">Skill Name</h3>
+                    <p id="detail-desc" style="color: var(--oat-fg-alt); font-size: 0.9rem;"></p>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="closeModal('skill-detail-modal')">✕</button>
+            </div>
+
+            <!-- Trust Breakdown -->
+            <div class="trust-breakdown" id="detail-trust" style="display:none;">
+                <div class="trust-item">
+                    <div class="label">Tests</div>
+                    <div class="value" id="trust-tests">—</div>
+                </div>
+                <div class="trust-item">
+                    <div class="label">Static</div>
+                    <div class="value" id="trust-static">—</div>
+                </div>
+                <div class="trust-item">
+                    <div class="label">License</div>
+                    <div class="value" id="trust-license">—</div>
+                </div>
+                <div class="trust-item">
+                    <div class="label">Provenance</div>
+                    <div class="value" id="trust-provenance">—</div>
+                </div>
+            </div>
+
+            <!-- Meta badges -->
+            <div id="detail-badges" style="margin-bottom: 0.75rem;"></div>
+
+            <!-- SKILL.md Content -->
+            <div class="skill-detail-body" id="detail-body">Loading...</div>
+
+            <!-- Actions -->
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="detail-preview-btn" onclick="previewAutofill()">
+                    🎯 Preview Autofill
+                </button>
+                <button class="btn btn-primary" id="detail-install-btn" onclick="installCurrentSkill()">
+                    ⚡ Install as Tool
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.js"></script>
+    <script src="/static/main.js"></script>
+    <script>
+        let allSkills = [];
+        let currentSkill = null;
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSkillsCatalog();
+        });
+
+        async function loadSkillsCatalog() {
+            try {
+                const resp = await fetch('/api/skills');
+                allSkills = await resp.json();
+                renderSkills(allSkills);
+            } catch (e) {
+                console.error('Failed to load skills:', e);
+            }
+        }
+
+        function renderSkills(skills) {
+            const grid = document.getElementById('skills-grid');
+
+            if (!skills.length) {
+                grid.innerHTML = `
+                    <div class="empty-skills">
+                        <div class="emoji">🧩</div>
+                        <p>No skills found. Click <strong>"Sync from Anthropic"</strong> to fetch the catalog.</p>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = skills.map(s => {
+                const meta = s.metadata || {};
+                const type = meta.skill_type || 'instructional';
+                const trustPct = Math.round((s.trust_score || 0) * 100);
+                const trustClass = trustPct >= 80 ? 'high' : trustPct >= 50 ? 'mid' : 'low';
+                const license = (s.license || 'Unknown').replace('Complete terms in LICENSE.txt', 'Source-available');
+
+                return `
+                    <div class="skill-card" onclick="openSkillDetail('${s.id}')">
+                        <div class="skill-name">${s.name}</div>
+                        <div class="skill-desc">${s.description || 'No description'}</div>
+                        <div class="skill-meta">
+                            <span class="skill-badge ${type === 'executable' ? 'type-exec' : 'type-inst'}">
+                                ${type === 'executable' ? '⚙️ executable' : '📖 instructional'}
+                            </span>
+                            <span class="skill-badge license">📄 ${license.substring(0, 20)}</span>
+                            ${s.installed ? '<span class="skill-badge installed">✓ installed</span>' : ''}
+                        </div>
+                        <div class="trust-bar">
+                            <div class="fill ${trustClass}" style="width: ${trustPct}%"></div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function filterSkills(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            let filtered = allSkills;
+            if (filter === 'executable') {
+                filtered = allSkills.filter(s => (s.metadata || {}).skill_type === 'executable');
+            } else if (filter === 'instructional') {
+                filtered = allSkills.filter(s => (s.metadata || {}).skill_type === 'instructional');
+            } else if (filter === 'installed') {
+                filtered = allSkills.filter(s => s.installed);
+            }
+            renderSkills(filtered);
+        }
+
+        async function syncSkills() {
+            const btn = document.getElementById('sync-btn');
+            const status = document.getElementById('sync-status');
+            btn.disabled = true;
+            btn.textContent = '⟳ Syncing...';
+            status.textContent = 'Fetching from GitHub...';
+
+            try {
+                await fetch('/api/skills/sync', { method: 'POST' });
+
+                // Poll for completion
+                let attempts = 0;
+                const poll = setInterval(async () => {
+                    const resp = await fetch('/api/skills/sync/status');
+                    const data = await resp.json();
+                    attempts++;
+
+                    if (!data.running || attempts > 30) {
+                        clearInterval(poll);
+                        btn.disabled = false;
+                        btn.textContent = '⟳ Sync from Anthropic';
+
+                        if (data.last_result) {
+                            status.textContent = `✓ Synced ${data.last_result.synced || 0} skills`;
+                        } else {
+                            status.textContent = '✓ Sync complete';
+                        }
+                        loadSkillsCatalog();
+                    } else {
+                        status.textContent = `Syncing... (${attempts}s)`;
+                    }
+                }, 2000);
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = '⟳ Sync from Anthropic';
+                status.textContent = '✕ Sync failed';
+            }
+        }
+
+        async function importSkillUrl() {
+            const input = document.getElementById('import-url');
+            const url = input.value.trim();
+            if (!url) return;
+
+            try {
+                const resp = await fetch('/api/skills/import-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url }),
+                });
+                const data = await resp.json();
+
+                if (data.status === 'exists') {
+                    document.getElementById('sync-status').textContent = 'Skill already exists';
+                } else {
+                    document.getElementById('sync-status').textContent = `✓ Imported: ${data.slug}`;
+                    input.value = '';
+                    loadSkillsCatalog();
+                }
+            } catch (e) {
+                document.getElementById('sync-status').textContent = '✕ Import failed';
+            }
+        }
+
+        async function openSkillDetail(skillId) {
+            const skill = allSkills.find(s => s.id === skillId);
+            if (!skill) return;
+            currentSkill = skill;
+
+            document.getElementById('detail-name').textContent = skill.name;
+            document.getElementById('detail-desc').textContent = skill.description || '';
+
+            // Badges
+            const meta = skill.metadata || {};
+            const type = meta.skill_type || 'instructional';
+            const license = (skill.license || 'Unknown');
+            document.getElementById('detail-badges').innerHTML = `
+                <span class="skill-badge ${type === 'executable' ? 'type-exec' : 'type-inst'}">
+                    ${type === 'executable' ? '⚙️ executable' : '📖 instructional'}
+                </span>
+                <span class="skill-badge license">📄 ${license}</span>
+                ${meta.python_blocks ? `<span class="skill-badge type-exec">${meta.python_blocks} Python blocks</span>` : ''}
+                ${skill.installed ? '<span class="skill-badge installed">✓ installed</span>' : ''}
+            `;
+
+            // SKILL.md body
+            document.getElementById('detail-body').textContent = skill.raw_markdown || 'No content available';
+
+            // Install button state
+            const installBtn = document.getElementById('detail-install-btn');
+            if (skill.installed) {
+                installBtn.textContent = '✓ Installed';
+                installBtn.disabled = true;
+            } else {
+                installBtn.textContent = '⚡ Install as Tool';
+                installBtn.disabled = false;
+            }
+
+            // Show trust breakdown if available
+            const trustDiv = document.getElementById('detail-trust');
+            if (skill.trust_score > 0) {
+                trustDiv.style.display = 'grid';
+                document.getElementById('trust-tests').textContent = '—';
+                document.getElementById('trust-static').textContent = '—';
+                document.getElementById('trust-license').textContent = `${Math.round(skill.trust_score * 100)}%`;
+                document.getElementById('trust-provenance').textContent = skill.source_url?.includes('anthropics') ? '✓' : '—';
+            } else {
+                trustDiv.style.display = 'none';
+            }
+
+            openModal('skill-detail-modal');
+        }
+
+        async function installCurrentSkill() {
+            if (!currentSkill) return;
+
+            const btn = document.getElementById('detail-install-btn');
+            btn.disabled = true;
+            btn.textContent = '⚡ Installing...';
+
+            try {
+                const resp = await fetch(`/api/skills/${currentSkill.id}/install`, { method: 'POST' });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    btn.textContent = `✓ Installed (trust: ${Math.round(data.trust_score * 100)}%)`;
+
+                    // Update trust breakdown
+                    if (data.breakdown) {
+                        document.getElementById('detail-trust').style.display = 'grid';
+                        document.getElementById('trust-tests').textContent = `${Math.round(data.breakdown.tests * 100)}%`;
+                        document.getElementById('trust-static').textContent = `${Math.round(data.breakdown.static * 100)}%`;
+                        document.getElementById('trust-license').textContent = `${Math.round(data.breakdown.license * 100)}%`;
+                        document.getElementById('trust-provenance').textContent = `${Math.round(data.breakdown.provenance * 100)}%`;
+                    }
+
+                    // Update local data
+                    currentSkill.installed = true;
+                    currentSkill.trust_score = data.trust_score;
+                    loadSkillsCatalog();
+                } else {
+                    const err = await resp.json();
+                    btn.textContent = `✕ Failed: ${err.detail || 'Unknown error'}`;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                btn.textContent = '✕ Install failed';
+                btn.disabled = false;
+            }
+        }
+
+        function previewAutofill() {
+            if (!currentSkill) return;
+
+            // Build autofill data and redirect to dashboard with query params
+            const title = currentSkill.name.replace(/-/g, ' ')
+                .replace(/\b\w/g, c => c.toUpperCase());
+            const desc = currentSkill.description || '';
+
+            const params = new URLSearchParams({
+                autofill: '1',
+                title: title,
+                description: desc.substring(0, 300),
+            });
+
+            closeModal('skill-detail-modal');
+            window.location.href = `/?${params.toString()}`;
+        }
+    </script>
+</body>
+
+</html>
