@@ -1,7 +1,6 @@
 # AEGIS — Autonomous Execution & Governance Intelligent System
 
 <div align="center">
-  <img src="./assets/aegis.png" alt="AEGIS Dashboard" width="800"/>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
   ![VanillaJS](https://img.shields.io/badge/Vanilla_JS-ES6-yellow)
