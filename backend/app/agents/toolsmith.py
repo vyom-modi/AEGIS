@@ -29,9 +29,11 @@ def run(input: dict) -> dict:
     return {{"result": "output", "success": True}}
 ```
 
-Rules:
-- Use ONLY standard library imports (json, math, datetime, re, collections, etc.)
+STRICT Rules:
+- Use ONLY Python standard library imports (json, math, datetime, re, collections, hashlib, random, etc.)
+- ABSOLUTELY DO NOT use third-party packages: requests, PyPDF2, reportlab, pandas, numpy, beautifulsoup4, playwright, scrapy, Pillow, flask, etc.
 - Do NOT import: os, sys, subprocess, socket, http, urllib, pathlib
+- If the task requires functionality from a third-party library, SIMULATE it using stdlib
 - Handle errors with try/except
 - Return a dict with at least "result" and "success" keys
 - Keep the function focused and under 30 lines

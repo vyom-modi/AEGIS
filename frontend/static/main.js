@@ -94,8 +94,8 @@ async function createGoal(event) {
 async function launchMission(goalId) {
     try {
         const result = await api.post(`/goals/${goalId}/launch`, {});
-        alert(result.message || 'Mission launched!');
-        loadGoals();
+        // Auto-redirect to mission page so user sees live polling
+        window.location.href = `/mission?goal_id=${goalId}`;
     } catch (err) {
         alert('Failed to launch: ' + err.message);
     }
@@ -286,8 +286,8 @@ async function loadMission() {
             logPanel.innerHTML = '<div class="log-line info">No execution logs yet.</div>';
         }
 
-        // Auto-poll while mission is running
-        if (goal.status === 'running') {
+        // Auto-poll while mission is running or just launched
+        if (goal.status === 'running' || goal.status === 'pending') {
             if (!missionPollTimer) {
                 missionPollTimer = setInterval(() => loadMission(), 3000);
             }

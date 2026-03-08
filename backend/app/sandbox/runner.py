@@ -16,13 +16,19 @@ from typing import Optional
 from app.config import get_settings
 
 
-# Imports that are NOT allowed in the subprocess sandbox
+# Imports that are NOT allowed in the sandbox
 BLOCKED_IMPORTS = {
+    # System access
     "os", "sys", "subprocess", "shutil", "pathlib",
     "importlib", "ctypes", "socket", "http", "urllib",
     "ftplib", "smtplib", "telnetlib", "pickle",
     "shelve", "marshal", "tempfile", "glob",
     "signal", "multiprocessing", "threading",
+    # Third-party packages (not available in sandbox)
+    "requests", "PyPDF2", "reportlab", "pandas", "numpy",
+    "beautifulsoup4", "bs4", "playwright", "scrapy",
+    "PIL", "Pillow", "flask", "django", "sqlalchemy",
+    "selenium", "aiohttp", "httpx",
 }
 
 
