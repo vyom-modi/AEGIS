@@ -1,10 +1,22 @@
 # AEGIS — Autonomous Execution & Governance Intelligent System
 
-> A production-grade agentic AI platform for autonomous task execution, hierarchical planning, and self-improving workflows.
+<div align="center">
+  <img src="./assets/aegis.png" alt="AEGIS Dashboard" width="800"/>
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+  ![VanillaJS](https://img.shields.io/badge/Vanilla_JS-ES6-yellow)
+  ![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green)
+  ![Python](https://img.shields.io/badge/Python-3.11+-blue)
+  ![Supabase](https://img.shields.io/badge/Supabase-pgvector-44be74)
+  
+  *A production-grade agentic AI platform for autonomous task execution, hierarchical planning, and self-improving workflows.*
+</div>
 
 ```
 Browser  →  Oat UI Frontend  →  FastAPI Backend  →  Supabase DB  →  LLM APIs
 ```
+
+[![AEGIS Home Page](./assets/aegis.png)](https://youtu.be/KXqjEhTy-uE)
 
 ## Features
 
@@ -81,7 +93,10 @@ cp .env.example .env
 
 ### 2. Set up the database
 
-Run `supabase/schema.sql` in your Supabase SQL Editor to create all tables.
+Run the following SQL files in your Supabase SQL Editor (or via Supabase CLI) in this exact order to set up the tables and vector extensions:
+
+1. `supabase/schema.sql` (Creates core tables: goals, plans, tasks, tools, metrics, memory)
+2. `supabase/skills_migration.sql` (Adds the skills table for Anthropic integrations)
 
 ### 3. Start the backend
 
