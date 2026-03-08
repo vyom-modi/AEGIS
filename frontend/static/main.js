@@ -11,7 +11,9 @@ const API_BASE = '/api';
 
 const api = {
     async get(endpoint) {
-        const res = await fetch(`${API_BASE}${endpoint}`);
+        // Add cache-busting parameter to prevent stale polling data
+        const separator = endpoint.includes('?') ? '&' : '?';
+        const res = await fetch(`${API_BASE}${endpoint}${separator}_t=${Date.now()}`);
         if (!res.ok) throw new Error(`GET ${endpoint} failed: ${res.status}`);
         return res.json();
     },
