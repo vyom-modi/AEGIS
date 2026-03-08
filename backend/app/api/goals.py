@@ -116,5 +116,5 @@ async def launch_mission(goal_id: UUID, background_tasks: BackgroundTasks):
         goal_id=goal_id,
         plan_id=goal_id,  # Plan ID assigned during execution
         status="launched",
-        message="Mission launched — agents are processing the goal",
+        message="Mission Launched 🚀",
     )
