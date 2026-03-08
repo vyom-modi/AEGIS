@@ -5,7 +5,7 @@
  * No framework dependencies.
  */
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = '/api';
 
 // ── API Client ─────────────────────────────
 
@@ -224,7 +224,8 @@ function connectLogs(taskId) {
     const panel = document.getElementById('log-panel');
     if (!panel) return;
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/logs/${taskId}`);
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/logs/${taskId}`);
 
     ws.onmessage = (event) => {
         const line = document.createElement('div');

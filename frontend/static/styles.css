@@ -81,6 +81,7 @@ a:hover {
     font-weight: 700;
     background: linear-gradient(135deg, var(--oat-primary), #a29bfe);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: 0.05em;
 }
@@ -201,9 +202,17 @@ a:hover {
     line-height: 1.2;
 }
 
-.card-value.success { color: var(--oat-success); }
-.card-value.warning { color: var(--oat-warning); }
-.card-value.danger  { color: var(--oat-danger); }
+.card-value.success {
+    color: var(--oat-success);
+}
+
+.card-value.warning {
+    color: var(--oat-warning);
+}
+
+.card-value.danger {
+    color: var(--oat-danger);
+}
 
 /* ── Status Badges ──────────────────── */
 
@@ -217,10 +226,25 @@ a:hover {
     font-weight: 500;
 }
 
-.badge-pending  { background: rgba(255,170,0,0.15); color: var(--oat-warning); }
-.badge-running  { background: rgba(108,92,231,0.15); color: var(--oat-primary); }
-.badge-completed { background: rgba(0,214,143,0.15); color: var(--oat-success); }
-.badge-failed   { background: rgba(255,61,113,0.15); color: var(--oat-danger); }
+.badge-pending {
+    background: rgba(255, 170, 0, 0.15);
+    color: var(--oat-warning);
+}
+
+.badge-running {
+    background: rgba(108, 92, 231, 0.15);
+    color: var(--oat-primary);
+}
+
+.badge-completed {
+    background: rgba(0, 214, 143, 0.15);
+    color: var(--oat-success);
+}
+
+.badge-failed {
+    background: rgba(255, 61, 113, 0.15);
+    color: var(--oat-danger);
+}
 
 /* ── Tables ─────────────────────────── */
 
@@ -388,9 +412,17 @@ a:hover {
     padding: 0.15rem 0;
 }
 
-.log-panel .log-line.success { color: var(--oat-success); }
-.log-panel .log-line.error   { color: var(--oat-danger); }
-.log-panel .log-line.info    { color: var(--oat-primary); }
+.log-panel .log-line.success {
+    color: var(--oat-success);
+}
+
+.log-panel .log-line.error {
+    color: var(--oat-danger);
+}
+
+.log-panel .log-line.info {
+    color: var(--oat-primary);
+}
 
 /* ── Section Dividers ───────────────── */
 
@@ -451,8 +483,15 @@ a:hover {
 /* ── Animations ─────────────────────── */
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .pulse {
@@ -460,8 +499,15 @@ a:hover {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .fade-in {
