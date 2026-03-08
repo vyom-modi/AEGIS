@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEGIS — Tools</title>
+    <meta name="description" content="AEGIS Tools Registry — View and manage auto-generated tools">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo">Δ</div>
+                <h1>AEGIS</h1>
+            </div>
+            <nav>
+                <a href="/">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/mission">
+                    <span class="icon">🚀</span>
+                    <span>Missions</span>
+                </a>
+                <a href="/tools" class="active">
+                    <span class="icon">🔧</span>
+                    <span>Tools</span>
+                </a>
+                <a href="/agents">
+                    <span class="icon">🤖</span>
+                    <span>Agents</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <h2>Tools Registry</h2>
+                <p>Auto-generated and manually registered tools for agent execution.</p>
+            </div>
+
+            <div class="section">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Trust Score</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tools-list">
+                        <tr>
+                            <td colspan="4" class="empty-state" style="padding:2rem">
+                                Loading tools...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.js"></script>
+    <script src="/static/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,469 @@
+/* ============================
+   AEGIS — Custom Styles
+   Extends Oat UI theme
+   ============================ */
+
+:root {
+    /* Dark theme palette */
+    --oat-bg: #0f1117;
+    --oat-bg-alt: #161922;
+    --oat-fg: #e4e6eb;
+    --oat-fg-alt: #8b8fa3;
+    --oat-primary: #6c5ce7;
+    --oat-primary-hover: #7c6ff7;
+    --oat-border: #2a2d3a;
+    --oat-success: #00d68f;
+    --oat-warning: #ffaa00;
+    --oat-danger: #ff3d71;
+
+    /* Custom tokens */
+    --aegis-sidebar-w: 240px;
+    --aegis-radius: 10px;
+    --aegis-transition: 0.2s ease;
+    --aegis-glow: 0 0 20px rgba(108, 92, 231, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--oat-bg);
+    color: var(--oat-fg);
+    min-height: 100vh;
+    display: flex;
+}
+
+a {
+    color: var(--oat-primary);
+    text-decoration: none;
+    transition: color var(--aegis-transition);
+}
+
+a:hover {
+    color: var(--oat-primary-hover);
+}
+
+/* ── Layout ─────────────────────────── */
+
+.app-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--aegis-sidebar-w);
+    background: var(--oat-bg-alt);
+    border-right: 1px solid var(--oat-border);
+    padding: 1.5rem 1rem;
+    position: fixed;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--oat-border);
+    margin-bottom: 1rem;
+}
+
+.sidebar-brand h1 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--oat-primary), #a29bfe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.05em;
+}
+
+.sidebar-brand .logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--oat-primary), #a29bfe);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: white;
+    font-weight: bold;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--aegis-radius);
+    color: var(--oat-fg-alt);
+    font-size: 0.88rem;
+    transition: all var(--aegis-transition);
+}
+
+.sidebar nav a:hover,
+.sidebar nav a.active {
+    background: rgba(108, 92, 231, 0.1);
+    color: var(--oat-fg);
+}
+
+.sidebar nav a.active {
+    background: rgba(108, 92, 231, 0.15);
+    color: var(--oat-primary);
+    font-weight: 500;
+}
+
+.sidebar nav a .icon {
+    font-size: 1.1rem;
+    width: 1.4rem;
+    text-align: center;
+}
+
+.main-content {
+    margin-left: var(--aegis-sidebar-w);
+    flex: 1;
+    padding: 2rem 2.5rem;
+    min-height: 100vh;
+}
+
+/* ── Page Header ────────────────────── */
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+
+.page-header p {
+    color: var(--oat-fg-alt);
+    font-size: 0.9rem;
+}
+
+/* ── Cards ──────────────────────────── */
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--oat-bg-alt);
+    border: 1px solid var(--oat-border);
+    border-radius: var(--aegis-radius);
+    padding: 1.25rem;
+    transition: all var(--aegis-transition);
+}
+
+.card:hover {
+    border-color: var(--oat-primary);
+    box-shadow: var(--aegis-glow);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.card-title {
+    font-size: 0.85rem;
+    color: var(--oat-fg-alt);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+
+.card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.card-value.success { color: var(--oat-success); }
+.card-value.warning { color: var(--oat-warning); }
+.card-value.danger  { color: var(--oat-danger); }
+
+/* ── Status Badges ──────────────────── */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-pending  { background: rgba(255,170,0,0.15); color: var(--oat-warning); }
+.badge-running  { background: rgba(108,92,231,0.15); color: var(--oat-primary); }
+.badge-completed { background: rgba(0,214,143,0.15); color: var(--oat-success); }
+.badge-failed   { background: rgba(255,61,113,0.15); color: var(--oat-danger); }
+
+/* ── Tables ─────────────────────────── */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--oat-fg-alt);
+    border-bottom: 1px solid var(--oat-border);
+}
+
+.data-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--oat-border);
+    font-size: 0.9rem;
+}
+
+.data-table tr:hover td {
+    background: rgba(108, 92, 231, 0.03);
+}
+
+/* ── Forms ──────────────────────────── */
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--oat-fg-alt);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    background: var(--oat-bg);
+    border: 1px solid var(--oat-border);
+    border-radius: 8px;
+    color: var(--oat-fg);
+    font-size: 0.9rem;
+    transition: border-color var(--aegis-transition);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--oat-primary);
+    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* ── Buttons ────────────────────────── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all var(--aegis-transition);
+}
+
+.btn-primary {
+    background: var(--oat-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--oat-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+}
+
+.btn-secondary {
+    background: var(--oat-bg);
+    color: var(--oat-fg);
+    border: 1px solid var(--oat-border);
+}
+
+.btn-secondary:hover {
+    border-color: var(--oat-primary);
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+/* ── Modal / Dialog ─────────────────── */
+
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-backdrop.open {
+    display: flex;
+}
+
+.modal {
+    background: var(--oat-bg-alt);
+    border: 1px solid var(--oat-border);
+    border-radius: var(--aegis-radius);
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal h3 {
+    margin-bottom: 1.25rem;
+    font-size: 1.1rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+/* ── Logs Panel ─────────────────────── */
+
+.log-panel {
+    background: #0d0f14;
+    border: 1px solid var(--oat-border);
+    border-radius: var(--aegis-radius);
+    padding: 1rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    max-height: 400px;
+    overflow-y: auto;
+    color: var(--oat-fg-alt);
+}
+
+.log-panel .log-line {
+    padding: 0.15rem 0;
+}
+
+.log-panel .log-line.success { color: var(--oat-success); }
+.log-panel .log-line.error   { color: var(--oat-danger); }
+.log-panel .log-line.info    { color: var(--oat-primary); }
+
+/* ── Section Dividers ───────────────── */
+
+.section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ── Empty State ────────────────────── */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--oat-fg-alt);
+}
+
+.empty-state .icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin-bottom: 1rem;
+}
+
+/* ── Responsive ─────────────────────── */
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 60px;
+        padding: 1rem 0.5rem;
+    }
+
+    .sidebar-brand h1,
+    .sidebar nav a span {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 60px;
+        padding: 1.5rem 1rem;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Animations ─────────────────────── */
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease forwards;
+}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEGIS — Agents</title>
+    <meta name="description" content="AEGIS Agent Workflow — View the orchestration pipeline">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        .agent-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 600px;
+        }
+
+        .agent-node {
+            background: var(--oat-bg-alt);
+            border: 1px solid var(--oat-border);
+            border-radius: var(--aegis-radius);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all var(--aegis-transition);
+        }
+
+        .agent-node:hover {
+            border-color: var(--oat-primary);
+            box-shadow: var(--aegis-glow);
+            transform: translateX(4px);
+        }
+
+        .agent-node .node-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .agent-node .node-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .agent-node .node-info p {
+            font-size: 0.8rem;
+            color: var(--oat-fg-alt);
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: var(--oat-fg-alt);
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .flow-branch {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-left: 2rem;
+            color: var(--oat-fg-alt);
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo">Δ</div>
+                <h1>AEGIS</h1>
+            </div>
+            <nav>
+                <a href="/">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/mission">
+                    <span class="icon">🚀</span>
+                    <span>Missions</span>
+                </a>
+                <a href="/tools">
+                    <span class="icon">🔧</span>
+                    <span>Tools</span>
+                </a>
+                <a href="/agents" class="active">
+                    <span class="icon">🤖</span>
+                    <span>Agents</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <div class="page-header">
+                <h2>Agent Workflow</h2>
+                <p>The AEGIS orchestration pipeline powered by LangGraph.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🔗 Execution Flow</div>
+
+                <div class="agent-flow">
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(108,92,231,0.15);">🎯</div>
+                        <div class="node-info">
+                            <h4>GoalManager</h4>
+                            <p>Loads goal, validates state, schedules execution</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(0,214,143,0.15);">📋</div>
+                        <div class="node-info">
+                            <h4>Planner</h4>
+                            <p>Decomposes goals into structured execution plans via LLM</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(255,170,0,0.15);">🔍</div>
+                        <div class="node-info">
+                            <h4>Decomposer</h4>
+                            <p>Refines unclear tasks into actionable sub-steps</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-branch">↳ conditional: if steps require tools...</div>
+
+                    <div class="agent-node" style="margin-left: 2rem; border-style: dashed;">
+                        <div class="node-icon" style="background: rgba(255,170,0,0.15);">⚒️</div>
+                        <div class="node-info">
+                            <h4>Toolsmith <span style="color: var(--oat-fg-alt); font-weight: normal;">(optional)</span>
+                            </h4>
+                            <p>Auto-generates Python tools and registers them in the system</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(108,92,231,0.15);">⚡</div>
+                        <div class="node-info">
+                            <h4>Executor</h4>
+                            <p>Runs tasks in E2B sandbox, executes tools, streams logs</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(255,61,113,0.15);">🧐</div>
+                        <div class="node-info">
+                            <h4>Critic</h4>
+                            <p>Analyzes outputs, detects problems, scores quality</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(0,214,143,0.15);">✅</div>
+                        <div class="node-info">
+                            <h4>Verifier</h4>
+                            <p>Validates correctness and runs verification checks</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(108,92,231,0.15);">🧠</div>
+                        <div class="node-info">
+                            <h4>Memory</h4>
+                            <p>Stores embeddings in pgvector for long-term recall</p>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+
+                    <div class="agent-node">
+                        <div class="node-icon" style="background: rgba(0,214,143,0.15);">📈</div>
+                        <div class="node-info">
+                            <h4>Monitor</h4>
+                            <p>Tracks success rate, latency, cost — triggers self-improvement</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.js"></script>
+    <script src="/static/main.js"></script>
+</body>
+
+</html>

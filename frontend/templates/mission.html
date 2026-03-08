@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEGIS — Mission</title>
+    <meta name="description" content="AEGIS Mission Detail — Plan tree, task status, and live logs">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo">Δ</div>
+                <h1>AEGIS</h1>
+            </div>
+            <nav>
+                <a href="/">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/mission" class="active">
+                    <span class="icon">🚀</span>
+                    <span>Missions</span>
+                </a>
+                <a href="/tools">
+                    <span class="icon">🔧</span>
+                    <span>Tools</span>
+                </a>
+                <a href="/agents">
+                    <span class="icon">🤖</span>
+                    <span>Agents</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content" id="mission-content">
+
+            <div class="page-header">
+                <h2 id="mission-title">Mission Details</h2>
+                <p>
+                    Status: <span id="mission-status" class="badge badge-pending">loading</span>
+                </p>
+            </div>
+
+            <!-- Plans -->
+            <div class="section">
+                <div class="section-title">📋 Execution Plans</div>
+                <div id="plans-list" class="card-grid">
+                    <div class="empty-state">
+                        <p>Loading plans...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task List -->
+            <div class="section">
+                <div class="section-title">✅ Tasks</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Agent</th>
+                            <th>Status</th>
+                            <th>Retries</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasks-list">
+                        <tr>
+                            <td colspan="4" class="empty-state">Tasks will appear after a mission is launched.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Live Logs -->
+            <div class="section">
+                <div class="section-title">📡 Live Logs</div>
+                <div class="log-panel" id="log-panel">
+                    <div class="log-line info">Waiting for mission data...</div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@knadh/oat@latest/oat.min.js"></script>
+    <script src="/static/main.js"></script>
+</body>
+
+</html>
