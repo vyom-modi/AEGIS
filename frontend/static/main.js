@@ -114,10 +114,11 @@ async function loadMetrics() {
         const metrics = await api.get('/metrics');
 
         const totalGoals = goals.length;
-        const activeGoals = goals.filter(g => g.status === 'running').length;
+        const activeStates = ['running', 'active', 'launched', 'pending'];
+        const activeGoals = goals.filter(g => activeStates.includes(g.status)).length;
+        const pendingGoals = goals.filter(g => g.status === 'pending').length;
         const completedGoals = goals.filter(g => g.status === 'completed').length;
         const failedGoals = goals.filter(g => g.status === 'failed').length;
-        const pendingGoals = goals.filter(g => g.status === 'pending').length;
 
         // Calculate success rate from completed/total finished
         const finishedGoals = completedGoals + failedGoals;
@@ -298,8 +299,9 @@ async function loadMission() {
             logPanel.innerHTML = '<div class="log-line info">No execution logs yet.</div>';
         }
 
-        // Auto-poll while mission is running or just launched
-        if (goal.status === 'running' || goal.status === 'pending') {
+        // Auto-poll while mission is active correctly catching all non-terminal states
+        const activeStatuses = ['running', 'pending', 'launched', 'active'];
+        if (activeStatuses.includes(goal.status)) {
             if (!missionPollTimer) {
                 missionPollTimer = setInterval(() => loadMission(), 3000);
             }
@@ -395,7 +397,8 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardPollTimer = setInterval(async () => {
             try {
                 const goals = await api.get('/goals');
-                const hasRunning = goals.some(g => g.status === 'running');
+                const activeStatuses = ['running', 'pending', 'launched', 'active'];
+                const hasRunning = goals.some(g => activeStatuses.includes(g.status));
                 if (hasRunning) {
                     loadGoals();
                     loadMetrics();
