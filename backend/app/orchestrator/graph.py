@@ -17,6 +17,7 @@ from app.agents.critic import CriticAgent
 from app.agents.verifier import VerifierAgent
 from app.agents.memory import MemoryAgent
 from app.agents.monitor import MonitorAgent
+from app.agents.scheduler import SchedulerAgent
 
 
 class AegisState(TypedDict, total=False):
@@ -28,6 +29,7 @@ class AegisState(TypedDict, total=False):
     execution_results: list
     critique: dict
     verified: bool
+    verification_score: float
     tools_created: list
     metrics: dict
     current_agent: str
@@ -44,6 +46,7 @@ critic = CriticAgent()
 verifier = VerifierAgent()
 memory = MemoryAgent()
 monitor = MonitorAgent()
+scheduler = SchedulerAgent()
 
 
 def should_use_toolsmith(state: dict) -> str:
@@ -68,6 +71,7 @@ def build_graph() -> StateGraph:
     graph.add_node("verifier", verifier.execute)
     graph.add_node("memory", memory.execute)
     graph.add_node("monitor", monitor.execute)
+    graph.add_node("scheduler", scheduler.execute)
 
     # Define edges
     graph.set_entry_point("goal_manager")
@@ -86,7 +90,8 @@ def build_graph() -> StateGraph:
     graph.add_edge("critic", "verifier")
     graph.add_edge("verifier", "memory")
     graph.add_edge("memory", "monitor")
-    graph.add_edge("monitor", END)
+    graph.add_edge("monitor", "scheduler")
+    graph.add_edge("scheduler", END)
 
     return graph.compile()
 
