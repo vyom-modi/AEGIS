@@ -6,6 +6,7 @@ All LLM and service configuration is centralized here.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from pydantic_settings import BaseSettings
 
 
@@ -35,7 +36,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     class Config:
-        env_file = ".env"
+        env_file = str(Path(__file__).resolve().parent.parent.parent / ".env")
         env_file_encoding = "utf-8"
 
 
