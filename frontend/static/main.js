@@ -108,10 +108,23 @@ async function loadMetrics() {
         const totalGoals = goals.length;
         const activeGoals = goals.filter(g => g.status === 'running' || g.status === 'active').length;
         const completedGoals = goals.filter(g => g.status === 'completed').length;
+        const failedGoals = goals.filter(g => g.status === 'failed').length;
 
-        // Extract latest success rate from metrics
-        const successMetric = metrics.find(m => m.metric_name === 'success_rate');
-        const successRate = successMetric ? (successMetric.value * 100).toFixed(0) : '--';
+        // Calculate success rate from completed/total finished
+        const finishedGoals = completedGoals + failedGoals;
+        const successRate = finishedGoals > 0
+            ? ((completedGoals / finishedGoals) * 100).toFixed(0)
+            : '--';
+
+        // Get latest telemetry values
+        const latestMetric = (name) => {
+            const m = metrics.find(m => m.metric_name === name);
+            return m ? m.value : null;
+        };
+
+        const qualityScore = latestMetric('quality_score');
+        const avgLatency = latestMetric('avg_latency_s');
+        const toolsGenerated = latestMetric('tools_generated');
 
         container.innerHTML = `
             <div class="card fade-in">
@@ -130,6 +143,21 @@ async function loadMetrics() {
                 <div class="card-header"><span class="card-title">Success Rate</span></div>
                 <div class="card-value success">${successRate}%</div>
             </div>
+            ${qualityScore !== null ? `
+            <div class="card fade-in">
+                <div class="card-header"><span class="card-title">Quality Score</span></div>
+                <div class="card-value">${(qualityScore * 100).toFixed(0)}%</div>
+            </div>` : ''}
+            ${avgLatency !== null ? `
+            <div class="card fade-in">
+                <div class="card-header"><span class="card-title">Avg Latency</span></div>
+                <div class="card-value">${avgLatency.toFixed(2)}s</div>
+            </div>` : ''}
+            ${toolsGenerated !== null ? `
+            <div class="card fade-in">
+                <div class="card-header"><span class="card-title">Tools Generated</span></div>
+                <div class="card-value">${toolsGenerated.toFixed(0)}</div>
+            </div>` : ''}
         `;
     } catch (err) {
         console.error('Failed to load metrics:', err);
